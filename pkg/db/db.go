@@ -31,13 +31,13 @@ func Init(dbFile string) error {
 	var err error
 	DB, err = sql.Open("sqlite", dbFile)
 	if err != nil {
-		return fmt.Errorf("Ошибка подключения к БД: %w", err)
+		return fmt.Errorf("ошибка подключения к БД: %w", err)
 	}
 
 	if install {
 		_, err := DB.Exec(schema)
 		if err != nil {
-			return fmt.Errorf("Ошибка при создании таблицы в БД: %w", err)
+			return fmt.Errorf("ошибка при создании таблицы в БД: %w", err)
 		}
 		fmt.Println("Таблица успешно создана.")
 	}

@@ -115,8 +115,42 @@ func UpdateTask(task *Task) error {
 		return err
 	}
 	if count == 0 {
-		return fmt.Errorf("задача с id %d не найдена для обновления", task.ID)
+		return fmt.Errorf("задача с id %s не найдена для обновления", task.ID)
 	}
 
+	return nil
+}
+
+// DeleteTask удаляет задачу по id
+func DeleteTask(id string) error {
+	query := `DELETE FROM scheduler WHERE id = ?`
+	res, err := DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return fmt.Errorf("задача с таким id не найдена")
+	}
+	return nil
+}
+
+// UpdateDate обновляет дату задачи по id
+func UpdateDate(nextDate string, id string) error {
+	query := `UPDATE scheduler SET date = ? WHERE id = ?`
+	res, err := DB.Exec(query, nextDate, id)
+	if err != nil {
+		return err
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return fmt.Errorf("задача с таким id не найдена")
+	}
 	return nil
 }
