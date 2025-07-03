@@ -67,13 +67,12 @@ func checkDate(task *db.Task) error {
 			return fmt.Errorf("неверное правило повторения: %v", err)
 		}
 
-		// Если дата уже в прошлом, берём next
-		if !afterNow(t, now) {
+		// Меняем дату только если она раньше сегодня (т.е. в прошлом)
+		if t.Before(now) {
 			task.Date = next
 		}
 	} else {
-		// Если правила нет, но дата в прошлом — ставим сегодняшнюю
-		if !afterNow(t, now) {
+		if t.Before(now) {
 			task.Date = now.Format(layout)
 		}
 	}

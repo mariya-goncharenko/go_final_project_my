@@ -115,9 +115,13 @@ func CalculateNextDate(current time.Time, startDateStr, repeatRule string) (stri
 			return "", errors.New("недопустимый интервал для дней")
 		}
 
-		// Если стартовая дата ещё не наступила, прибавляем интервал сразу
-		if !startDate.Before(current) {
-			startDate = startDate.AddDate(0, 0, interval)
+		if startDate.Equal(current) {
+			// стартовая дата сегодня — тоже возвращаем её
+			return startDate.Format(layout), nil
+		}
+
+		if startDate.After(current) {
+			// стартовая дата в будущем — возвращаем её
 			return startDate.Format(layout), nil
 		}
 
