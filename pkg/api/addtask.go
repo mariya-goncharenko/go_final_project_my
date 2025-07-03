@@ -90,6 +90,44 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		addTaskHandler(w, r)
+	case http.MethodGet:
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			writeJson(w, map[string]string{"error": "Не указан идентификатор"})
+			return
+		}
+		task, err := db.GetTask(id)
+		if err != nil {
+			writeJson(w, map[string]string{"error": "Задача не найдена"})
+			return
+		}
+		writeJson(w, task)
+	case http.MethodPut:
+		var task db.Task
+		err := json.NewDecoder(r.Body).Decode(&task)
+		if err != nil {
+			writeJson(w, map[string]string{"error": fmt.Sprintf("ошибка декодирования JSON: %v", err)})
+			return
+		}
+		if task.ID == "" {
+			writeJson(w, map[string]string{"error": "Не указан идентификатор задачи"})
+			return
+		}
+		if task.Title == "" {
+			writeJson(w, map[string]string{"error": "Не указан заголовок задачи"})
+			return
+		}
+		err = checkDate(&task)
+		if err != nil {
+			writeJson(w, map[string]string{"error": err.Error()})
+			return
+		}
+		err = db.UpdateTask(&task)
+		if err != nil {
+			writeJson(w, map[string]string{"error": err.Error()})
+			return
+		}
+		writeJson(w, map[string]string{})
 	default:
 		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
 	}

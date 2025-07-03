@@ -2,7 +2,9 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -28,8 +30,8 @@ func AddTask(task *Task) (int64, error) {
 func Tasks(limit int, search string) ([]*Task, error) {
 	tasks := make([]*Task, 0, limit)
 
-	layoutSearch := "02.01.2006" // формат даты для поиска из параметра search
-	layoutDB := "20060102"       // формат даты в БД
+	layoutSearch := "02.01.2006"
+	layoutDB := "20060102"
 
 	// Проверяем, соответствует ли search дате в формате 02.01.2006
 	searchDate, err := time.Parse(layoutSearch, search)
@@ -75,4 +77,46 @@ func Tasks(limit int, search string) ([]*Task, error) {
 		tasks = make([]*Task, 0)
 	}
 	return tasks, nil
+}
+
+// GetTask - получение задачb по id
+func GetTask(id string) (*Task, error) {
+	task := new(Task)
+
+	// конвертируем id в int64
+	idInt, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return nil, errors.New("некорректный идентификатор")
+	}
+
+	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`
+	err = DB.QueryRow(query, idInt).Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("задача не найдена")
+		}
+		return nil, err
+	}
+
+	return task, nil
+}
+
+// UpdateTask - позволяет обновить задачу по id
+func UpdateTask(task *Task) error {
+	query := `UPDATE scheduler SET date = ?, title = ?, comment = ?, repeat = ? WHERE id = ?`
+
+	res, err := DB.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	if err != nil {
+		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return fmt.Errorf("задача с id %d не найдена для обновления", task.ID)
+	}
+
+	return nil
 }
