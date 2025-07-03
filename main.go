@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go1f/pkg/server"
+	"log"
 	"os"
 
 	"github.com/mariya-goncharenko/go_final_project_my/pkg/db"
@@ -15,7 +16,7 @@ func main() {
 	}
 
 	if err := db.Init(dbFile); err != nil {
-		fmt.Println("Ошибка при подключении к БД:", err)
+		log.Fatal("Ошибка при подключении к БД:", err)
 		os.Exit(1)
 	}
 

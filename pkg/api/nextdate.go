@@ -29,7 +29,7 @@ func convertToInts(input string) ([]int, error) {
 		// Удаляем пробелы и конвертируем в число
 		num, err := strconv.Atoi(strings.TrimSpace(part))
 		if err != nil {
-			return nil, errors.New("failed to parse integer from input")
+			return nil, fmt.Errorf("failed to parse integer from input: %w", err)
 		}
 		result = append(result, num)
 	}

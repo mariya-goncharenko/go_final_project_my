@@ -19,7 +19,7 @@ func Run() error {
 		if err == nil {
 			port = val
 		} else {
-			return fmt.Errorf("invalid TODO_PORT: %v", err)
+			return fmt.Errorf("invalid TODO_PORT: %w", err)
 		}
 	}
 

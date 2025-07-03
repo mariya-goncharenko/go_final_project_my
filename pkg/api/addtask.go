@@ -16,32 +16,42 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// Чтение JSON из тела запроса
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
-		writeJson(w, map[string]string{"error": fmt.Sprintf("ошибка декодирования JSON: %v", err)})
+		writeJson(w, http.StatusBadRequest, map[string]string{
+			"error": fmt.Sprintf("ошибка декодирования JSON: %v", err),
+		})
 		return
 	}
 
 	// Проверка обязательного поля title
 	if task.Title == "" {
-		writeJson(w, map[string]string{"error": "Не указан заголовок задачи"})
+		writeJson(w, http.StatusBadRequest, map[string]string{
+			"error": "Не указан заголовок задачи",
+		})
 		return
 	}
 
 	// Проверка даты и правила повторения
 	err = checkDate(&task)
 	if err != nil {
-		writeJson(w, map[string]string{"error": err.Error()})
+		writeJson(w, http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
 	// Добавляем задачу в БД
 	id, err := db.AddTask(&task)
 	if err != nil {
-		writeJson(w, map[string]string{"error": fmt.Sprintf("ошибка записи в БД: %v", err)})
+		writeJson(w, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("ошибка записи в БД: %v", err),
+		})
 		return
 	}
 
 	// Возвращаем id добавленной задачи
-	writeJson(w, map[string]string{"id": fmt.Sprintf("%d", id)})
+	writeJson(w, http.StatusOK, map[string]string{
+		"id": fmt.Sprintf("%d", id),
+	})
 }
 
 // checkDate проверяет дату и правило повторения и изменяет дату задачи, если необходимо
@@ -65,7 +75,7 @@ func checkDate(task *db.Task) error {
 	if len(task.Repeat) > 0 {
 		next, err := CalculateNextDate(now, task.Date, task.Repeat)
 		if err != nil {
-			return fmt.Errorf("неверное правило повторения: %v", err)
+			return fmt.Errorf("неверное правило повторения: %w", err)
 		}
 
 		// Меняем дату только если она раньше сегодня (т.е. в прошлом)
@@ -81,8 +91,9 @@ func checkDate(task *db.Task) error {
 	return nil
 }
 
-// writeJson сериализует данные в JSON и пишет их в ответ
-func writeJson(w http.ResponseWriter, data any) {
+// writeJson сериализует данные в JSON и пишет их в ответ с нужным статус-кодом
+func writeJson(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
 }
